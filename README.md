@@ -63,4 +63,4 @@ midrangeRL/
 
 
 ## 维护团队
-PyBasicalPractice开发组 @2024
+MidRange RL开发组 @2024
