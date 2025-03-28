@@ -5,7 +5,7 @@
 
 ## 核心功能模块
 
-### 1. 简易飞行器物理模型
+### 1. 简易的飞行器物理模型
 - 转弯率与速度*舵量成正比
 - 阻力正比例于速度平方
 - 阻力系数随升力系数线性增加
@@ -49,7 +49,8 @@ midrangeRL/
 ├── aircraft_model.py   # 飞行器物理模型
 ├── missile_guidance.py  # 导弹制导算法
 ├── visualization.py     # 可视化系统
-└── rl_interface.py      # 强化学习接口
+├── rl_interface.py      # 强化学习接口
+└── NN_designs.py        # 神经网络设计
 ```
 
 ## 未来扩展
