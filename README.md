@@ -1,3 +1,4 @@
+# MidRangeRL - 中距空战强化学习环境
 
 ## 项目介绍
 
@@ -9,67 +10,94 @@
 
 Gemini、Cursor与TRAE等LLM代码助手正在帮我们处理最令人掉头发的程序实现部分。
 
-## 主要文件介绍
+## 项目特点
 
-### config默认参数文件：
-1. 飞机和导弹的物理参数，最小转弯半径R，自由落体终端速度vt，诱导阻力Cd1函数规则（默认是与舵量成正比），导弹发动机工作时间Rocket_lifetime
-2. 更多导弹制导策略（计划中的开发）
-3. 默认训练策略（计划中的开发）
+- **高性能并行模拟**：支持在单个GPU上同时模拟超过100万个环境实例
+- **矢量化物理引擎**：基于向量的物理计算，提供更真实的飞行动力学
+- **高效内存管理**：针对大规模批处理进行了内存优化
+- **导弹制导系统**：实现了现实的导弹制导逻辑
+- **可扩展架构**：易于扩展和自定义的模块化设计
 
-### requirements.txt需提前安装好的库：
-Pytorch、RLlib、gym
+## 项目结构
 
-### env_tensor游戏环境后端文件夹：
-1. 基于Pytorch内置tensor方法实现，可以被train与play调用而在GPU上创建若干个游戏实例
-2. 训练模式自动高倍率时间加速，让GPU主频与作战Ai的模型性能来决定一秒钟跑多少个物理帧
-3. aerodynamic_tensor.py ：这个文件原本叫做aircraft_model，它的功能是从config获得导弹和飞机的物理参数，然后进行角速度和加速度两项物理计算，角速度Omega正比于线速度v乘以舵量rudder除以最小转弯半径R
-4. 加速度a=推力Thrust-阻力Drag，Drag=阻力系数Cd*速度v²，Cd=零升阻力系数Cd0+诱导阻力系数Cd1，Cd0=重力加速度g/自由落体终端速度vt平方
-5. missile_guidance_tensor.py ：它定义了导弹制导模式是比例引导法
-6. game_events_tensor.py 这个文件原本是主程序midrangeRL的一部分，用于处理导弹发射、导弹速度低于200自毁、导弹摧毁战机、游戏胜利事件、同归于尽事件、武器耗尽事件
+```
+midrangeRL/
+├── env_numpy/             # NumPy环境实现（单例模式）
+├── env_tensor/            # PyTorch张量环境实现（批处理、GPU加速）
+├── visualization/         # 可视化相关组件
+├── game_play.py           # 游戏实际运行入口
+└── run_tensor_test.py      # 批量性能测试脚本
+```
 
-### env_numpy游戏环境后端文件夹：
-1. 包含aerodynamic.py、game_events.py、missile_guidance.py，这是最初版本的游戏后端，当使用tensor运算的GPU版env多次启动失败时，建议您通过修改game_play.py和visualization.py文件当中的调用，手动切换到这个使用CPU计算的后端
+## 核心模块
 
-### game_play.py游戏主程序：（原midrangeRL.py）
-1. 开始菜单当中可设置红蓝双方各自为Ai还是玩家，可以选择Ai模型的版本
-2. 通过visualization.py提供可视化UI，画风模仿了3Blue1Brown的科普视频制作库Manim，可切换到时空图视角，展示单个env实例中发生的事，并显示胜利/同归于尽/平局
-3. 向env传递玩家操作（红方AD舵量，T开火，蓝方左右舵量，=开火）
-4. 也可以传递Ai模型的操作，同样是舵量与开火
+### env_tensor - 高性能张量环境
 
+- **aerodynamic_tensor.py**：物理引擎
+- **missile_guidance_tensor.py**：张量化的导弹制导系统
+- **game_events_tensor.py**：游戏事件处理系统（碰撞检测、边界处理等）
+- **tensor_env_manager.py**：环境管理器，整合所有组件
+- **test_million_envs.py**：百万级并行环境测试脚本
 
-### replays文件夹：（计划中的开发）
-1. 存放战斗录像（为了避免这个文件夹爆满，game_play默认不开启录像，需要每次打开游戏时手动开启）
-2. game_play当中可以回到开始菜单查看已保存的战斗回放
-3. 当游戏进行时/回放播放时game_play的“实体列表”UI中以示波器形式展示各个实体的速度大小随时间变化的曲线
+## 快速开始
 
-### models文件夹：（计划中的开发）
-1. 存放不同结构的Ai模型设计与模型参数，比如全连接、时空图扩散预测器、离散动作组等
-2. 模型参数文件的命名规则为“模型名称_版本号”，比如Dense16neuro3layer_v1
-3. 有一个完全基于预设规则的AI，智商比较低，懂得追击和在射程内发射导弹，但是一看到敌方导弹来袭就特别喜欢逃跑，逃跑的时候会乱扭消耗自己的速度，可以用在游戏中调戏，也可以给别的模型冷启动
+### 安装依赖
 
-### train.py强化学习训练程序：（计划中的开发）
-1. 提供训练选项菜单，可以设置训练哪一个模型，使用哪一个版本的奖励函数，是否选择已训练过的版本，训练步数要多少步，训练完成后保存的文件名称等
-2. 可根据GPU性能预估可以并行的实例数，无论是弱小可怜无助的1050还是豪华的V100都可以稳定发挥出50%以上的性能，听风扇呼啸
-3. 提供训练过程中参数变化的UI，以曲线图形式显示，并显示预期还剩多少分钟完成训练
+```bash
+pip install torch numpy pygame
+```
 
-### evaluate.py评估程序：
-（计划中的开发）
+### 运行游戏
 
-### distill.py蒸馏程序：
-（计划中的开发，用于预处理那些在强化学习刚开始时难以冷启动收敛的模型，方法是用已经收敛的模型生成replay数据集，构造损失函数做梯度下降来训练新模型）
+```bash
+python game_play.py
+```
 
-### RL_tools强化学习工具箱文件夹：
-1. （计划中的开发）rewards_v1.py 这是默认版本的奖励函数，包括自保、击中自己的导弹的速度、杀敌、节约导弹，这里我们十分鼓励你自己设计一个版本
+### 运行百万级环境测试
+
+```bash
+python -m env_tensor.test_million_envs --num_envs 1000000 --steps 10
+```
 
 
+
+## 环境接口
+
+环境管理器提供了标准的强化学习接口：
+
+```python
+from env_tensor.tensor_env_manager import TensorEnvManager
+
+# 创建环境
+env = TensorEnvManager(num_envs=1024, device='cuda')
+
+# 重置环境
+observations = env.reset()
+
+# 执行步骤
+actions = {
+    'red': {
+        'throttle': torch.rand(1024, device='cuda'),  # 0到1
+        'rudder': torch.rand(1024, device='cuda')*2-1,  # -1到1
+        'fire': torch.rand(1024, device='cuda') > 0.9  # 布尔值
+    },
+    'blue': {
+        'throttle': torch.rand(1024, device='cuda'),
+        'rudder': torch.rand(1024, device='cuda')*2-1,
+        'fire': torch.rand(1024, device='cuda') > 0.9
+    }
+}
+
+observations, rewards, dones, info = env.step(actions)
+
+# 关闭环境
+env.close()
+```
 ## 路线图
-✅ 完成基础 NumPy 环境 (env_numpy) 并验证核心物理逻辑 (基于力)。
-
-🚧 实现 PyTorch Tensor 后端 (env_tensor) 以支持 GPU 并行。
 
 🚀 对接强化学习框架，实现基础训练流程 (train.py)。
 
-✨ 开发 HTML5 前端原型，特别是时空图可视化 (web_frontend)。
+✨ 开发 HTML5 前端原型，实现主菜单，战斗回放，时空图可视化 (web_frontend)。
 
 🔧 (可选/评估中) 探索 Isaac Gym 以获得极致并行性能。
 
@@ -78,4 +106,5 @@ Pytorch、RLlib、gym
 📈 持续迭代物理模型、AI 策略和功能。
 
 ## 许可证
-MIT License
+
+MIT

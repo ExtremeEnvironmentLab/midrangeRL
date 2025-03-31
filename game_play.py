@@ -78,6 +78,10 @@ class Aircraft:
         self.y = y  # 实际坐标（米）
         self.angle = angle  # 朝向角度（度）
         self.speed = 300  # 初始速度（米/秒）
+        # 添加速度向量分量
+        rad = math.radians(angle)
+        self.vx = math.cos(rad) * self.speed  # 速度x分量
+        self.vy = math.sin(rad) * self.speed  # 速度y分量
         self.throttle = 1.0  # 油门位置（0-1）
         self.rudder = 0.0  # 舵量（-1到1）
         self.missiles = 6  # 导弹数量
@@ -327,7 +331,10 @@ class Game:
                     True,
                     True
                 )
+                # 设置导弹速度和速度向量
                 missile.speed = self.aircraft1.speed
+                missile.vx = self.aircraft1.vx
+                missile.vy = self.aircraft1.vy
                 missile.target = self.aircraft2
                 
                 # 减少导弹数量
@@ -346,7 +353,10 @@ class Game:
                     False,
                     True
                 )
+                # 设置导弹速度和速度向量
                 missile.speed = self.aircraft2.speed
+                missile.vx = self.aircraft2.vx
+                missile.vy = self.aircraft2.vy
                 missile.target = self.aircraft1
                 
                 # 减少导弹数量
